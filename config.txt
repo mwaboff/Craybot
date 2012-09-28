@@ -1,0 +1,51 @@
+##########################################
+##
+##    Craybot - a multipurpose Internet Relay Chat bot
+##    Copyright (C) 2009 Michael Aboff
+##                       
+##    This program and all software included with this distribution is free software: you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation, either version 3 of the License, or
+##    (at your option) any later version.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+##
+##########################################
+# Please change any data here you need in order to personalize your version of Craybot. Do not change any other data or this may not work. You must keep information in quotations. Please don't mess too much with this shit, you can really fuck up your computer!
+#
+## Edit bot specific information:
+#
+nickname = 'Craybot'
+password = ''        # Nickserv Password
+owner = ''              # Default password is 'pass' make sure that you change it via IRC!
+server = ''
+channels = '#kiwi'
+#
+trigger = '>'                   # Preceeds all commands
+ubertrigger = '-'               # Preceeds Owner-only commands
+#
+# Here is where you define what modules you add. (must be uncommented)
+# Syntax is:  [('module','Parser command'),('module','Parser command')...]
+#modules = [('mafia','mafiaParser(self, user, channel, msg)')]
+#
+# Servers have limits on how long a message can be. This is an arbitrary length, so you may change it if the server you are planning on using has more or less.
+charlimit = 350
+#
+#
+# BOT OWNER ONLY COMMANDS
+# I put them here because they shouldn't be known of outside of bot ownership. All other commands are at www.tinyurl.com/craybot2doc
+#
+#         op.add [user] [authlevel] [channel(s)]  ||  This command will add a botop (user) at a privilege (authlevel) for given channels. Channels must be in this format:  #channel,#channel,#channel     note the lack of spaces, only seperated by commas.
+#         op.del [user] [authlevel] [channel(s)/*]  ||  This command will remove botop status for a given channel. Mulitple channels are specified like above, but the owner may also use "*" to remove the person from all channels.
+#
+#     !!! UBER COMMANDS: these are very dangerous commands that may only be used by the owner as defined in this config file. These commands can be used badly to damage your computer, so DO NOT USE UNLESS YOU KNOW ABSOLUTELY WHAT YOU ARE DOING. They are preceeded by the uber command prefix as defined above and must be used by PM-ing the bot
+#     !!! These commands must be uncommented from opcmds.py before they can be used.
+#         eval [command]  ||  Uses the python command "eval" on any python friendly command you give 
+#         exec [command]  ||  Uses the python command "exec" on any python friendly command you give
+

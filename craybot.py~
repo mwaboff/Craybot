@@ -1,0 +1,195 @@
+#!/usr/bin/env python
+#########################################
+##
+##    Craybot - a multipurpose Internet Relay Chat bot
+##    Copyright (C) 2009 Crayboff
+##                       
+##    This program and all software included with this distribution is free software: you can redistribute it and/or modify
+##    it under the terms of the GNU General Public License as published by
+##    the Free Software Foundation, either version 3 of the License, or
+##    (at your option) any later version.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##    You should have received a copy of the GNU General Public License
+##    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+##
+#########################################
+# Misc imports
+import time, sys, urllib, pickle, random, re, os, shelve, math, httplib, datetime
+#sys.path.append('~/Craybot/cmds')
+#sys.path.append('~/Craybot/data')
+
+# Craybot imports
+import cmds.craybot_commands as commands
+import cmds.craybot_opcommands as opcommands
+import cmds.craybot_setcmds as setcmds
+import data.craybot_initdata as data
+
+# Twisted imports
+from twisted.words.protocols import irc
+from twisted.internet import reactor, protocol, task, defer
+
+# Debug & server variables
+global debug, server, chans
+server = 'irc.foonetic.net'
+debug = True
+if debug:
+    chans = '#kiwi'
+else:
+    chans = '#kiwi,#kiwistorytime,#xkcd-flu,#xkcd-signal,#mafia'
+
+# Code
+class Bot(irc.IRCClient):
+
+    def __init__(self):
+        self.nickname = "kiwiTEST"
+        self.password = "pass1363"
+        self.version = "2.0.0 pre-alpha"
+        self.trigger = ">"
+        self.ubertrigger = "-"
+        self.Owner = "crayboff"
+        
+        # Spam variables
+        self.floodwatcher = {}
+        self.cap_ratio = 0.65
+        self.special_ratio = 0.59
+        self.max_reps = 10
+        self.floodmax = 8
+        self.floodtime = 13
+    
+    def debugprint(message):
+        if debug:
+            print(message)
+    
+    def connectionMade(self):
+        irc.IRCClient.connectionMade(self)
+        data.initit()
+    
+    def connectionLost(self):
+        print("LOST CONNECTION! REASON:  %s" % reason)
+        irc.IRCClient.connectionLost(self, reason)
+    
+    def signedOn(self):
+        self.join(self.factory.channel)
+        self.mode(self.nickname, True, '+B', limit=None, user=self.nickname)
+        print('Joined irc.foonetic.net as %s' %(self.nickname), "version", self.version)
+        for op in data.authlevels:
+            self.authlevels[op]['logged in'] = False
+        auth = open('craybot_auth_dict.txt','w')
+        pickle.dump(data.authlevels, auth)
+        auth.close()
+        
+    def joined(self, channel):
+        print('Joined %s' %(channel))
+        if channel not in self.channelsettings:
+            self.channelsettings[channel] = {'welcomewagon':True, 'guard':True, 'shutup':False, 'listen':True}
+        self.userlist = []
+        self.floodwatcher[channel] = {}
+    
+    def noticed(self, user, channel, msg):
+        if user == 'Nickserv':
+            self.msg('Nickserv', 'identify '+self.password)
+        if 'foonetic' not in user and 'Chanserv' not in user:
+            print ("NOTICE (%s) -%s- %s" % (user, channel, msg))
+    
+    def irc_RPL_NAMREPLY(self, prefix, params):    #we want to create a working userlist
+        self.debugprint(params)
+        for name in params[3].split(' '):
+            name = name.strip('+').strip('&').strip('@').strip('%')
+            self.userlist.append(name)
+    
+    def irc_RPL_ENDOFNAMES(self, prefix, params):
+        channelin = params[1]
+        self.userlists[channelin] = self.userlist[1:-1]
+        self.userlists[channelin] = filter(None, self.userlists[channelin])
+        self.debugprint(self.userlists)
+        
+    def userRenamed(self, oldname, newname):
+        if newname in self.authlevels:
+            self.authlevels[newname]['logged in'] = False
+        for channel in self.userlists:
+            if oldname in channel:
+                self.userlists[channel].remove(oldname).append(newname).sort()
+            
+    def userQuit(self, user, quitMessage):
+        if user in self.authlevels:
+            self.authlevels[user]['logged in'] = False
+        for channel in self.userlists:
+            if oldname in channel:
+                self.userlists[channel].remove(user)
+    
+    def checkChannel(channel):
+        if channel != self.nickname:
+            return True
+        else:
+            return False
+    
+    # Message parsing
+    def privmsg(self, user, channel, msg):
+        realuser = user.split('!',1)[0]
+        hostmask = user.split('!',1)[1]
+        user = user.split('!',1)[0].lower()
+        # Mafia Parse
+        #if user == self.mafialeader and channel == self.mafiaroom:
+        #    self.mafiaParse(msg)
+        # PM
+        #elif checkChannel == False:
+        #    self.pmParse(user, msg)
+        # Spam Checker
+        #elif data.channelsettings['guard']:
+        #    self.checkSpam(user, channel, msg)
+        # Commands
+        #if msg.startswith(self.commandtrigger):
+        #    self.commandParser(user, channel, msg)
+        #elif re.search('(\\+\\+|--)', msg):
+        #    commands.karmaParse(msg)
+        # Markov
+        #elif re.match("%s(:|,)" % self.nickname.lower(), msg.lower()):
+        #    msg = msg[len(self.nickname)+1:].strip()
+        #    if data.channelsettings[channel]['shutup']==False:
+        #        self.markovGenerator(realuser, channel, msg)
+        #else:
+        #    msg = msg.strip()
+        #    if data.channelsettings[channel]['listen']:
+        #        self.markovCollect(msg)
+        
+    #def pmParse(self, user, msg):
+        #if msg.startswith(self.ubertrigger):
+        #    self.uberParse(user, msg)
+        #else:
+        #    self.commandParser(user, channel, msg)
+    
+    def commandParser(self, user, channel, msg):
+        command = msg.strip('>').lower()
+        #if checkChannel(channel):
+        #    if commands.startswith('hilight'):
+        #        commands.hilightparse(user, channel, command)
+        
+        
+        
+        
+class KomurinFactory(protocol.ClientFactory):       #A 'factory' for the bot.
+
+    protocol = Komurin
+
+    def __init__(self, channel):
+        self.channel = channel
+
+    def clientConnectionLost(self, connector, reason):      #We got disconnected, reconnect.
+        connector.connect()
+        
+    def clientConnectionFailed(self, connector, reason):
+        print "connection failed:", reason
+        reactor.stop()
+
+
+if __name__ == '__main__':                              #Check if we ran it, not imported it.
+    f = KomurinFactory(chans)
+    reactor.connectTCP("irc.foonetic.net", 6667, f)
+    reactor.run()
+    #Code here that gets run after the reactor is shut down.
+    

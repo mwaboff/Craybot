@@ -1,0 +1,20 @@
+# Craybot written by Crayboff (email: crayboff at mafianode.com )
+# Please change any data here you need in order to personalize your version of Craybot. Do not change any other data or this may not work. You must keep information in quotations. Please don't mess too much with this shit, you can really fuck up your computer!
+#
+## Edit bot specific information:
+#
+nickname = 'Craybot2'
+password = ''        # Nickserv Password
+owner = 'Crayboff'              # Default password is 'pass' make sure that you change it via IRC!
+server = 'irc.foonetic.net'
+channels = '#mafia,#kiwi,#kiwistorytime,#applestoapples'
+#
+trigger = '>'                   # Preceeds all commands
+ubertrigger = '-'               # Preceeds Owner-only commands
+#
+# Here is where you define what modules you add.
+# Syntax is:  [('module','Parser command'),('module','Parser command')...]
+modules = [('mafia','mafiaParser(self, user, channel, msg)')]
+#
+# Servers have limits on how long a message can be. This is an arbitrary length, so you may change it if the server you are planning on using has more or less.
+charlimit = 350
